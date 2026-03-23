@@ -1,0 +1,50 @@
+<div class="page-wrapper">
+  <app-navbar />
+  <div class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">My Results</h1>
+      <a routerLink="/taker/browse" class="btn btn-primary">Take a Quiz</a>
+    </div>
+
+    @if (loading) {
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton mb-2" style="height:80px; border-radius:8px"></div>
+      }
+    } @else if (results.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p>You haven't taken any quizzes yet.</p>
+        <a routerLink="/taker/browse" class="btn btn-primary mt-2">Browse Quizzes</a>
+      </div>
+    } @else {
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Quiz</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of results; track r.resultId) {
+                <tr>
+                  <td><strong>{{ r.quizTitle }}</strong></td>
+                  <td>{{ r.score }}/{{ r.totalQuestions }}</td>
+                  <td>
+                    <span class="badge" [class]="r.percentage >= 70 ? 'badge-success' : r.percentage >= 40 ? 'badge-warning' : 'badge-danger'">
+                      {{ r.percentage | number:'1.0-0' }}%
+                    </span>
+                  </td>
+                  <td style="color:var(--text)">{{ r.completedAt | date:'medium' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+</div>

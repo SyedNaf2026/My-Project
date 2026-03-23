@@ -1,0 +1,214 @@
+<div class="page-wrapper">
+  <app-navbar />
+  <div class="main-content">
+
+    <!-- Loading -->
+    @if (loading) {
+      <div class="text-center p-3">
+        <div class="spinner" style="width:48px;height:48px;border-width:4px;margin:0 auto;
+          border-color:var(--primary);border-top-color:transparent;border-style:solid;
+          border-radius:50%;animation:spin 0.8s linear infinite"></div>
+        <p class="text-muted mt-2">Loading quiz...</p>
+      </div>
+    }
+
+    <!-- Error State -->
+    @else if (loadError) {
+      <div class="card p-3 text-center" style="max-width:500px;margin:2rem auto">
+        <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+        <h3 class="mb-1">Could not load quiz</h3>
+        <p class="text-muted mb-3">{{ errorMessage }}</p>
+        <a routerLink="/taker/browse" class="btn btn-primary">← Back to Browse</a>
+      </div>
+    }
+
+    <!-- Animated Result Screen -->
+    @else if (showResult && result) {
+      <div class="result-screen card p-3" style="max-width:640px;margin:0 auto;text-align:center">
+        <div class="result-emoji">
+          {{ result.percentage >= 70 ? '🎉' : result.percentage >= 40 ? '😊' : '😔' }}
+        </div>
+        <h2 class="mb-1" style="color:var(--text)">Quiz Complete!</h2>
+        <h3 style="color:var(--text)" class="mb-3">{{ result.quizTitle }}</h3>
+
+        <!-- Score Cards with animation -->
+        <div class="d-flex gap-2 justify-center mb-3">
+          <div class="score-card card p-2 text-center" style="min-width:130px">
+            <div class="score-value" style="color:var(--primary)">
+              {{ result.score }}/{{ result.totalQuestions }}
+            </div>
+            <div style="color:var(--text);font-size:0.875rem">Score</div>
+          </div>
+          <div class="score-card card p-2 text-center" style="min-width:130px">
+            <div class="score-value"
+              [style.color]="result.percentage >= 70 ? 'var(--success)' : result.percentage >= 40 ? 'var(--warning)' : 'var(--danger)'">
+              {{ result.percentage | number:'1.0-0' }}%
+            </div>
+            <div style="color:var(--text);font-size:0.875rem">Percentage</div>
+          </div>
+        </div>
+
+        <!-- Answer Breakdown -->
+        <div style="text-align:left" class="mb-3">
+          <h4 class="mb-2" style="color:var(--text)">Answer Breakdown</h4>
+          @for (a of result.answerBreakdown; track a.questionId; let i = $index) {
+            <div class="card p-2 mb-1"
+              [style.border-left]="'4px solid ' + (a.isCorrect ? 'var(--success)' : 'var(--danger)')">
+              <p class="fw-bold fs-sm mb-1" style="color:var(--text)">Q{{ i + 1 }}. {{ a.questionText }}</p>
+              <p class="fs-sm mb-0" style="color:var(--text)">
+                Your answer:
+                <span [class]="a.isCorrect ? 'badge badge-success' : 'badge badge-danger'">
+                  {{ a.selectedOptionText }}
+                </span>
+              </p>
+              @if (!a.isCorrect) {
+                <p class="fs-sm mb-0 mt-1" style="color:var(--text)">
+                  Correct: <span class="badge badge-success">{{ a.correctOptionText }}</span>
+                </p>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="d-flex gap-1 justify-center">
+          <a routerLink="/taker/browse" class="btn btn-primary">Browse More Quizzes</a>
+          <a routerLink="/taker/results" class="btn btn-outline">My Results</a>
+        </div>
+      </div>
+    }
+
+    <!-- Confirmation Screen -->
+    @else if (!quizStarted && quiz && questions.length > 0) {
+      <div class="card p-3" style="max-width:520px;margin:2rem auto;text-align:center">
+        <div style="font-size:3rem;margin-bottom:1rem">📝</div>
+        <h2 class="mb-1" style="color:var(--text)">{{ quiz.title }}</h2>
+        <p class="fs-sm mb-3" style="color:var(--text-muted)">{{ quiz.description }}</p>
+
+        <div class="d-flex gap-2 justify-center mb-3 flex-wrap">
+          <div class="card p-2 text-center" style="min-width:110px">
+            <div style="font-size:1.5rem">❓</div>
+            <div class="fw-bold" style="color:var(--text)">{{ questions.length }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Questions</div>
+          </div>
+          <div class="card p-2 text-center" style="min-width:110px">
+            <div style="font-size:1.5rem">⏱️</div>
+            <div class="fw-bold" style="color:var(--text)">{{ quiz.timeLimit ? quiz.timeLimit + ' min' : 'No limit' }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Time Limit</div>
+          </div>
+          <div class="card p-2 text-center" style="min-width:110px">
+            <div style="font-size:1.5rem">🏷️</div>
+            <div class="fw-bold" style="color:var(--text)">{{ quiz.categoryName }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Category</div>
+          </div>
+          @if (quiz.difficulty) {
+            <div class="card p-2 text-center" style="min-width:110px">
+              <div style="font-size:1.5rem">🎚️</div>
+              <div class="fw-bold" style="color:var(--text)">{{ quiz.difficulty }}</div>
+              <div style="font-size:0.8rem;color:var(--text-muted)">Difficulty</div>
+            </div>
+          }
+        </div>
+
+        @if (quiz.timeLimit) {
+          <p class="fs-sm mb-3" style="color:var(--warning)">
+            ⚠️ Once you start, the timer begins and cannot be paused.
+          </p>
+        }
+
+        <div class="d-flex gap-1 justify-center">
+          <a routerLink="/taker/browse" class="btn btn-outline">← Back</a>
+          <button class="btn btn-primary btn-lg" (click)="confirmStart()">🚀 Start Quiz</button>
+        </div>
+      </div>
+    }
+
+    <!-- Quiz Taking Screen (also shows instant feedback after submit) -->
+    @else if (quizStarted && quiz && questions.length > 0) {
+      <div style="max-width:720px;margin:0 auto">
+
+        <!-- Header -->
+        <div class="d-flex justify-between align-center mb-2 flex-wrap gap-1">
+          <div>
+            <h2 class="mb-0" style="color:var(--text)">{{ quiz.title }}</h2>
+            <p class="text-muted fs-sm mb-0">
+              {{ submitted ? 'Review your answers below' : currentQ + ' / ' + questions.length + ' answered' }}
+            </p>
+          </div>
+          <div class="d-flex gap-1 align-center">
+            @if (quiz.difficulty) {
+              <span class="badge"
+                [class]="quiz.difficulty === 'Easy' ? 'badge-success' : quiz.difficulty === 'Hard' ? 'badge-danger' : 'badge-warning'">
+                {{ quiz.difficulty }}
+              </span>
+            }
+            @if (quiz.timeLimit && !submitted) {
+              <div class="timer-badge" [class]="timerClass">
+                ⏱️ {{ timerDisplay }}
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        @if (!submitted) {
+          <div class="progress-bar-wrapper mb-3">
+            <div class="progress-bar-fill" [style.width.%]="progress"></div>
+          </div>
+        }
+
+        <!-- Submitted banner -->
+        @if (submitted && result) {
+          <div class="feedback-banner mb-3"
+            [class]="result.percentage >= 70 ? 'feedback-great' : result.percentage >= 40 ? 'feedback-ok' : 'feedback-poor'">
+            <span style="font-size:1.5rem">
+              {{ result.percentage >= 70 ? '🎉' : result.percentage >= 40 ? '👍' : '😔' }}
+            </span>
+            <div>
+              <strong>{{ result.percentage >= 70 ? 'Great job!' : result.percentage >= 40 ? 'Not bad!' : 'Keep practicing!' }}</strong>
+              <span class="fs-sm" style="margin-left:0.5rem">
+                You scored {{ result.score }}/{{ result.totalQuestions }} ({{ result.percentage | number:'1.0-0' }}%)
+              </span>
+            </div>
+          </div>
+        }
+
+        <!-- Questions with instant feedback -->
+        @for (q of questions; track q.id; let i = $index) {
+          <div class="card p-3 mb-2">
+            <p class="fw-bold mb-2" style="color:var(--text)">Q{{ i + 1 }}. {{ q.questionText }}</p>
+            <div class="d-flex gap-1 flex-wrap">
+              @for (opt of q.options; track opt.id) {
+                <button class="btn option-btn" style="flex:1;min-width:160px;text-align:left;color:var(--text)"
+                  [class]="optionClass(q.id, opt.id)"
+                  [disabled]="submitted"
+                  (click)="selectAnswer(q.id, opt.id)">
+                  @if (submitted && isCorrectOption(q.id, opt.id)) { ✅ }
+                  @else if (submitted && wasSelected(q.id, opt.id) && !isCorrectOption(q.id, opt.id)) { ❌ }
+                  {{ opt.optionText }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Submit / Viewing result -->
+        <div class="d-flex justify-between align-center mt-3 mb-3">
+          @if (!submitted) {
+            <p class="text-muted fs-sm mb-0">{{ questions.length - currentQ }} question(s) remaining</p>
+            <button class="btn btn-success btn-lg" (click)="submit()" [disabled]="submitting">
+              @if (submitting) { <span class="btn-spinner"></span> }
+              {{ submitting ? 'Submitting...' : 'Submit Quiz' }}
+            </button>
+          } @else {
+            <p class="text-muted fs-sm mb-0">Scroll up to see your score summary</p>
+            <div class="d-flex gap-1">
+              <a routerLink="/taker/browse" class="btn btn-primary">Browse Quizzes</a>
+              <a routerLink="/taker/results" class="btn btn-outline">My Results</a>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

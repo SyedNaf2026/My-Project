@@ -1,0 +1,90 @@
+<div class="page-wrapper">
+  <app-navbar />
+  <div class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Questions — {{ quizTitle }}</h1>
+      <div class="d-flex gap-1">
+        <button class="btn btn-primary" (click)="toggleForm()">
+          {{ showForm ? '✕ Cancel' : '+ Add Question' }}
+        </button>
+        <a routerLink="/creator/my-quizzes" class="btn btn-outline">← Back</a>
+      </div>
+    </div>
+
+    <!-- Add Question Form -->
+    @if (showForm) {
+      <div class="card p-3 mb-3">
+        <h3 class="mb-2">New Question</h3>
+        <form [formGroup]="qForm" (ngSubmit)="addQuestion()">
+          <div class="form-group">
+            <label class="form-label">Question Text</label>
+            <input type="text" class="form-control" formControlName="questionText" placeholder="Enter question"
+              [class.is-invalid]="qForm.get('questionText')!.invalid && qForm.get('questionText')!.touched">
+            @if (qForm.get('questionText')!.invalid && qForm.get('questionText')!.touched) {
+              <div class="invalid-feedback">Question text is required.</div>
+            }
+          </div>
+
+          <div formArrayName="options">
+            <label class="form-label">Options (mark exactly one as correct)</label>
+            @for (opt of optionsArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="d-flex align-center gap-1 mb-1">
+                <input type="text" class="form-control" formControlName="optionText" [placeholder]="'Option ' + (i+1)">
+                <label class="d-flex align-center gap-1 fs-sm" style="white-space:nowrap">
+                  <input type="checkbox" formControlName="isCorrect"> Correct
+                </label>
+                @if (optionsArray.length > 2) {
+                  <button type="button" class="btn btn-sm btn-danger" (click)="removeOption(i)">✕</button>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="d-flex gap-1 mt-2">
+            <button type="button" class="btn btn-sm btn-outline" (click)="addOption()">+ Option</button>
+            <button type="submit" class="btn btn-success" [disabled]="saving">
+              @if (saving) { <span class="btn-spinner"></span> }
+              Save Question
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Questions List -->
+    @if (loading) {
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton mb-2" style="height:100px; border-radius:8px"></div>
+      }
+    } @else if (questions.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">❓</div>
+        <p>No questions yet. Add your first question above.</p>
+      </div>
+    } @else {
+      @for (q of questions; track q.id; let i = $index) {
+        <div class="card p-3 mb-2">
+          <div class="d-flex justify-between align-center mb-1">
+            <strong>Q{{ i + 1 }}. {{ q.questionText }}</strong>
+            <button class="btn btn-sm btn-danger" (click)="confirmDeleteQ(q)">Delete</button>
+          </div>
+          <div class="d-flex gap-1 flex-wrap">
+            @for (opt of q.options; track opt.id) {
+              <span class="badge" [class]="opt.isCorrect ? 'badge-success' : 'badge-secondary'">
+                {{ opt.isCorrect ? '✓' : '○' }} {{ opt.optionText }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<app-confirm-dialog
+  [visible]="showConfirm"
+  title="Delete Question"
+  message="Delete this question and all its options?"
+  confirmLabel="Delete"
+  (confirm)="doDeleteQ()"
+  (cancel)="showConfirm = false" />
