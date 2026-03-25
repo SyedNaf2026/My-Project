@@ -14,21 +14,23 @@ import { CategoryDTO, QuizDTO } from '../../models/models';
   templateUrl: './browse-quizzes.html'
 })
 export class BrowseQuizzes implements OnInit {
-  quizzes: QuizDTO[] = [];
+  allQuizzes: QuizDTO[] = [];
   filtered: QuizDTO[] = [];
   paged: QuizDTO[] = [];
   categories: CategoryDTO[] = [];
+  availableDifficulties: string[] = [];
+
   loading = true;
   search = '';
-  categoryId: number | null = null;
-  difficulty = '';
+  selectedCategoryId: number | null = null;
+  selectedDifficulty = '';
   page = 1;
   pageSize = 6;
   totalPages = 1;
   pages: number[] = [];
 
   get pageStart() { return (this.page - 1) * this.pageSize + 1; }
-  get pageEnd() { return Math.min(this.page * this.pageSize, this.filtered.length); }
+  get pageEnd()   { return Math.min(this.page * this.pageSize, this.filtered.length); }
 
   constructor(
     private quizService: QuizService,
@@ -39,20 +41,12 @@ export class BrowseQuizzes implements OnInit {
 
   ngOnInit(): void {
     this.categoryService.getAllCategories().subscribe({
-      next: (r) => {
-        this.categories = r.data || [];
-        this.cdr.detectChanges();
-      }
+      next: (r) => { this.categories = r.data || []; this.cdr.detectChanges(); }
     });
-    this.load();
-  }
-
-  load(catId?: number): void {
     this.loading = true;
-    this.cdr.detectChanges();
-    this.quizService.getActiveQuizzes(catId).subscribe({
+    this.quizService.getActiveQuizzes().subscribe({
       next: (res) => {
-        this.quizzes = res.data || [];
+        this.allQuizzes = res.data || [];
         this.applyFilter();
         this.loading = false;
         this.cdr.detectChanges();
@@ -67,10 +61,40 @@ export class BrowseQuizzes implements OnInit {
 
   applyFilter(): void {
     const q = this.search.toLowerCase();
-    this.filtered = this.quizzes.filter(quiz =>
-      (!q || quiz.title.toLowerCase().includes(q) || (quiz.description || '').toLowerCase().includes(q)) &&
-      (!this.difficulty || (quiz.difficulty || '') === this.difficulty)
-    );
+
+    // Filter by category name
+    const catName = this.selectedCategoryId
+      ? (this.categories.find(c => c.id === this.selectedCategoryId)?.name ?? '')
+      : '';
+    let result = catName
+      ? this.allQuizzes.filter(x => x.categoryName === catName)
+      : [...this.allQuizzes];
+
+    // Build difficulty options from current category result
+    const found = result.map(x => x.difficulty ?? '').filter(d => d !== '');
+    const unique = [...new Set(found)];
+    const order = ['Easy', 'Medium', 'Hard'];
+    this.availableDifficulties = order.filter(d => unique.includes(d));
+
+    // Reset difficulty if no longer valid
+    if (this.selectedDifficulty && !this.availableDifficulties.includes(this.selectedDifficulty)) {
+      this.selectedDifficulty = '';
+    }
+
+    // Filter by difficulty
+    if (this.selectedDifficulty) {
+      result = result.filter(x => (x.difficulty ?? '') === this.selectedDifficulty);
+    }
+
+    // Filter by search text
+    if (q) {
+      result = result.filter(x =>
+        x.title.toLowerCase().includes(q) ||
+        (x.description ?? '').toLowerCase().includes(q)
+      );
+    }
+
+    this.filtered = result;
     this.page = 1;
     this.updatePage();
   }
@@ -90,12 +114,13 @@ export class BrowseQuizzes implements OnInit {
 
   onCategoryFilter(e: Event): void {
     const val = (e.target as HTMLSelectElement).value;
-    this.categoryId = val ? Number(val) : null;
-    this.load(this.categoryId || undefined);
+    this.selectedCategoryId = val ? Number(val) : null;
+    this.selectedDifficulty = '';
+    this.applyFilter();
   }
 
   onDifficultyFilter(e: Event): void {
-    this.difficulty = (e.target as HTMLSelectElement).value;
+    this.selectedDifficulty = (e.target as HTMLSelectElement).value;
     this.applyFilter();
   }
 

@@ -569,6 +569,14 @@
           "selectedOptionId": {
             "type": "integer",
             "format": "int32"
+          },
+          "selectedOptionIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -611,6 +619,10 @@
             "type": "string",
             "nullable": true
           },
+          "questionType": {
+            "type": "string",
+            "nullable": true
+          },
           "options": {
             "type": "array",
             "items": {
@@ -640,6 +652,10 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -652,10 +668,6 @@
             "nullable": true
           },
           "password": {
-            "type": "string",
-            "nullable": true
-          },
-          "role": {
             "type": "string",
             "nullable": true
           }
@@ -751,6 +763,10 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

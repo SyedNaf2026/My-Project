@@ -6,7 +6,6 @@ using QuizzApp.Models;
 
 namespace QuizzApp.Services
 {
-    // QuizAttemptService handles quiz taking, answer submission, and automatic scoring
     public class QuizAttemptService : IQuizAttemptService
     {
         private readonly IGenericRepository<Quiz> _quizRepo;
@@ -36,10 +35,10 @@ namespace QuizzApp.Services
             if (quiz == null) return (false, "Quiz not found.", null);
             if (!quiz.IsActive) return (false, "This quiz is not active.", null);
 
+            // Delete previous attempt so user can retake
             var existingAttempt = await _resultRepo.FindAsync(r => r.UserId == userId && r.QuizId == dto.QuizId);
             if (existingAttempt.Any())
             {
-                // Delete previous attempt so user can retake
                 foreach (var old in existingAttempt)
                     await _resultRepo.DeleteAsync(old);
                 var oldAnswers = await _answerRepo.FindAsync(a => a.UserId == userId && a.QuizId == dto.QuizId);
@@ -51,40 +50,72 @@ namespace QuizzApp.Services
             int totalQuestions = quiz.Questions.Count;
             var answerBreakdown = new List<AnswerResultDTO>();
 
-            // Process each submitted answer
             foreach (var answer in dto.Answers)
             {
                 var question = quiz.Questions.FirstOrDefault(q => q.Id == answer.QuestionId);
                 if (question == null) continue;
 
-                var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
-                var selectedOption = question.Options.FirstOrDefault(o => o.Id == answer.SelectedOptionId);
-
-                bool isCorrect = correctOption != null && answer.SelectedOptionId == correctOption.Id;
-                if (isCorrect) score++;
-
-                var userAnswer = new UserAnswer
-                {
-                    UserId = userId,
-                    QuizId = dto.QuizId,
-                    QuestionId = answer.QuestionId,
-                    SelectedOptionId = answer.SelectedOptionId
-                };
-                await _answerRepo.AddAsync(userAnswer);
-
-                answerBreakdown.Add(new AnswerResultDTO
+                bool isCorrect = false;
+                var breakdown = new AnswerResultDTO
                 {
                     QuestionId = question.Id,
                     QuestionText = question.QuestionText,
-                    SelectedOptionId = answer.SelectedOptionId,
-                    SelectedOptionText = selectedOption?.OptionText ?? "Not found",
-                    CorrectOptionId = correctOption?.Id ?? 0,
-                    CorrectOptionText = correctOption?.OptionText ?? "Not found",
-                    IsCorrect = isCorrect
-                });
+                    QuestionType = question.QuestionType
+                };
+
+                if (question.QuestionType == "MultipleAnswer")
+                {
+                    // Exact set match required for full point
+                    var correctIds = question.Options.Where(o => o.IsCorrect).Select(o => o.Id).ToHashSet();
+                    var selectedIds = answer.SelectedOptionIds.ToHashSet();
+                    isCorrect = correctIds.SetEquals(selectedIds);
+
+                    breakdown.SelectedOptionIds = answer.SelectedOptionIds;
+                    breakdown.SelectedOptionTexts = answer.SelectedOptionIds
+                        .Select(id => question.Options.FirstOrDefault(o => o.Id == id)?.OptionText ?? "")
+                        .ToList();
+                    breakdown.CorrectOptionIds = correctIds.ToList();
+                    breakdown.CorrectOptionTexts = question.Options
+                        .Where(o => o.IsCorrect).Select(o => o.OptionText).ToList();
+
+                    // Save one UserAnswer row per selected option
+                    foreach (var optId in answer.SelectedOptionIds)
+                    {
+                        await _answerRepo.AddAsync(new UserAnswer
+                        {
+                            UserId = userId,
+                            QuizId = dto.QuizId,
+                            QuestionId = answer.QuestionId,
+                            SelectedOptionId = optId
+                        });
+                    }
+                }
+                else
+                {
+                    // Single-answer types
+                    var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
+                    var selectedOption = question.Options.FirstOrDefault(o => o.Id == answer.SelectedOptionId);
+                    isCorrect = correctOption != null && answer.SelectedOptionId == correctOption.Id;
+
+                    breakdown.SelectedOptionId = answer.SelectedOptionId;
+                    breakdown.SelectedOptionText = selectedOption?.OptionText ?? "Not answered";
+                    breakdown.CorrectOptionId = correctOption?.Id ?? 0;
+                    breakdown.CorrectOptionText = correctOption?.OptionText ?? "Not found";
+
+                    await _answerRepo.AddAsync(new UserAnswer
+                    {
+                        UserId = userId,
+                        QuizId = dto.QuizId,
+                        QuestionId = answer.QuestionId,
+                        SelectedOptionId = answer.SelectedOptionId
+                    });
+                }
+
+                if (isCorrect) score++;
+                breakdown.IsCorrect = isCorrect;
+                answerBreakdown.Add(breakdown);
             }
 
-            // Calculate percentage
             double percentage = totalQuestions > 0
                 ? Math.Round((double)score / totalQuestions * 100, 2)
                 : 0;
@@ -100,7 +131,7 @@ namespace QuizzApp.Services
             };
             await _resultRepo.AddAsync(quizResult);
 
-            var resultDto = new QuizResultDTO
+            return (true, "Quiz submitted successfully.", new QuizResultDTO
             {
                 ResultId = quizResult.Id,
                 QuizId = dto.QuizId,
@@ -110,9 +141,7 @@ namespace QuizzApp.Services
                 Percentage = percentage,
                 CompletedAt = quizResult.CompletedAt,
                 AnswerBreakdown = answerBreakdown
-            };
-
-            return (true, "Quiz submitted successfully.", resultDto);
+            });
         }
 
         public async Task<IEnumerable<QuizResultDTO>> GetUserResultsAsync(int userId)
@@ -132,7 +161,7 @@ namespace QuizzApp.Services
                 TotalQuestions = r.TotalQuestions,
                 Percentage = r.Percentage,
                 CompletedAt = r.CompletedAt,
-                AnswerBreakdown = new List<AnswerResultDTO>() 
+                AnswerBreakdown = new List<AnswerResultDTO>()
             });
         }
     }

@@ -154,6 +154,11 @@ tr:hover td { background: rgba(79,70,229,0.04); }
 [data-theme="dark"] .badge-info { background: #1e3a5f; color: #93c5fd; }
 [data-theme="dark"] .badge-secondary { background: #374151; color: #d1d5db; }
 
+/* ===== Question list dark mode fix ===== */
+[data-theme="dark"] .card strong,
+[data-theme="dark"] .card span:not(.badge),
+[data-theme="dark"] .card label { color: var(--text); }
+
 /* ===== Alerts / Toasts ===== */
 .toast-container {
   position: fixed;
@@ -538,4 +543,95 @@ tr:hover td { background: rgba(79,70,229,0.04); }
   color: var(--text);
   border-color: var(--border);
   -webkit-text-fill-color: var(--text);
+}
+
+/* ===== Quiz Layout (navigator + main) ===== */
+.quiz-layout {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.q-nav-panel {
+  width: 180px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 1rem;
+}
+
+.quiz-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Navigator grid */
+.q-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.q-nav-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-nav-answered  { background: var(--success); color: #fff; }
+.q-nav-skipped   { background: var(--warning); color: #fff; }
+.q-nav-unanswered{ background: var(--border); color: var(--text); }
+.q-nav-active    { background: var(--primary); color: #fff; box-shadow: 0 0 0 2px var(--primary-dark); }
+
+.q-nav-btn:hover:not(:disabled) { opacity: 0.85; }
+.q-nav-btn:disabled { cursor: default; }
+
+/* Legend */
+.q-nav-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.q-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.q-legend-item .q-nav-btn {
+  width: 1.4rem;
+  height: 1.4rem;
+  aspect-ratio: 1;
+  font-size: 0.65rem;
+}
+
+/* Skip button */
+.skip-btn { color: var(--text) !important; }
+
+/* True/False & Yes/No large buttons */
+.tf-btn {
+  min-width: 120px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Multi-answer checkbox style */
+.multi-opt-btn { gap: 0.5rem; }
+.multi-check { font-size: 1.1rem; flex-shrink: 0; }
+
+/* Responsive: stack on small screens */
+@media (max-width: 640px) {
+  .quiz-layout { flex-direction: column; }
+  .q-nav-panel { width: 100%; position: static; }
+  .q-nav-grid { grid-template-columns: repeat(6, 1fr); }
 }

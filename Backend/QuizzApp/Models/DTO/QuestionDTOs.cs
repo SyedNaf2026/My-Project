@@ -10,8 +10,8 @@ namespace QuizzApp.DTOs
     {
         public int QuizId { get; set; }
         public string QuestionText { get; set; } = string.Empty;
-
-        // Each question should have at least 2 options
+        // MultipleChoice | MultipleAnswer | TrueFalse | YesNo
+        public string QuestionType { get; set; } = "MultipleChoice";
         public List<CreateOptionDTO> Options { get; set; } = new List<CreateOptionDTO>();
     }
 
@@ -20,6 +20,7 @@ namespace QuizzApp.DTOs
         public int Id { get; set; }
         public int QuizId { get; set; }
         public string QuestionText { get; set; } = string.Empty;
+        public string QuestionType { get; set; } = "MultipleChoice";
         public List<OptionDTO> Options { get; set; } = new List<OptionDTO>();
     }
 
@@ -27,8 +28,6 @@ namespace QuizzApp.DTOs
     {
         public int Id { get; set; }
         public string OptionText { get; set; } = string.Empty;
-
-        // Only included in responses for QuizCreators (not shown during quiz taking)
         public bool IsCorrect { get; set; }
     }
 }

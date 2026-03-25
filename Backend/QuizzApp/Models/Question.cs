@@ -9,6 +9,9 @@ namespace QuizzApp.Models
 
         public string QuestionText { get; set; } = string.Empty;
 
+        // MultipleChoice | MultipleAnswer | TrueFalse | YesNo
+        public string QuestionType { get; set; } = "MultipleChoice";
+
         // Navigation properties
         public Quiz? Quiz { get; set; }
         public ICollection<Option> Options { get; set; } = new List<Option>();

@@ -80,6 +80,7 @@ export interface QuestionDTO {
   id: number;
   quizId: number;
   questionText: string;
+  questionType: string; // MultipleChoice | MultipleAnswer | TrueFalse | YesNo
   options: OptionDTO[];
 }
 
@@ -91,13 +92,15 @@ export interface CreateOptionDTO {
 export interface CreateQuestionDTO {
   quizId: number;
   questionText: string;
+  questionType: string;
   options: CreateOptionDTO[];
 }
 
 // ===== Quiz Attempt =====
 export interface AnswerDTO {
   questionId: number;
-  selectedOptionId: number;
+  selectedOptionId: number;          // single-answer types
+  selectedOptionIds: number[];       // MultipleAnswer type
 }
 
 export interface SubmitQuizDTO {
@@ -108,10 +111,17 @@ export interface SubmitQuizDTO {
 export interface AnswerResultDTO {
   questionId: number;
   questionText: string;
+  questionType: string;
+  // single-answer
   selectedOptionId: number;
   selectedOptionText: string;
   correctOptionId: number;
   correctOptionText: string;
+  // multi-answer
+  selectedOptionIds: number[];
+  selectedOptionTexts: string[];
+  correctOptionIds: number[];
+  correctOptionTexts: string[];
   isCorrect: boolean;
 }
 

@@ -34,13 +34,20 @@ namespace QuizzApp.Services
 
             if (dto.Options.Count < 2)
                 return (false, "A question must have at least 2 options.", null);
-            if (dto.Options.Count(o => o.IsCorrect) != 1)
-                return (false, "A question must have exactly 1 correct option.", null);
+
+            int correctCount = dto.Options.Count(o => o.IsCorrect);
+            if (correctCount == 0)
+                return (false, "A question must have at least one correct option.", null);
+
+            // MultipleChoice, TrueFalse, YesNo must have exactly 1 correct
+            if (dto.QuestionType != "MultipleAnswer" && correctCount != 1)
+                return (false, "This question type must have exactly 1 correct option.", null);
 
             var question = new Question
             {
                 QuizId = dto.QuizId,
-                QuestionText = dto.QuestionText
+                QuestionText = dto.QuestionText,
+                QuestionType = dto.QuestionType
             };
 
             await _questionRepo.AddAsync(question);
@@ -55,13 +62,7 @@ namespace QuizzApp.Services
                     IsCorrect = optDto.IsCorrect
                 };
                 await _optionRepo.AddAsync(option);
-
-                optionDTOs.Add(new OptionDTO
-                {
-                    Id = option.Id,
-                    OptionText = option.OptionText,
-                    IsCorrect = option.IsCorrect
-                });
+                optionDTOs.Add(new OptionDTO { Id = option.Id, OptionText = option.OptionText, IsCorrect = option.IsCorrect });
             }
 
             var result = new QuestionDTO
@@ -69,6 +70,7 @@ namespace QuizzApp.Services
                 Id = question.Id,
                 QuizId = question.QuizId,
                 QuestionText = question.QuestionText,
+                QuestionType = question.QuestionType,
                 Options = optionDTOs
             };
 
@@ -87,6 +89,7 @@ namespace QuizzApp.Services
                 Id = q.Id,
                 QuizId = q.QuizId,
                 QuestionText = q.QuestionText,
+                QuestionType = q.QuestionType,
                 Options = q.Options.Select(o => new OptionDTO
                 {
                     Id = o.Id,

@@ -34,8 +34,7 @@ export class Login {
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
-      role: ['QuizTaker', Validators.required]
+      password: ['', Validators.required]
     });
   }
 

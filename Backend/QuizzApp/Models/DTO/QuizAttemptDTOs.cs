@@ -5,7 +5,11 @@ namespace QuizzApp.DTOs
     {
         public int QuestionId { get; set; }
 
+        // For single-answer question types (MultipleChoice, TrueFalse, YesNo)
         public int SelectedOptionId { get; set; }
+
+        // For MultipleAnswer questions — list of selected option IDs
+        public List<int> SelectedOptionIds { get; set; } = new List<int>();
     }
 
     public class SubmitQuizDTO
@@ -32,10 +36,20 @@ namespace QuizzApp.DTOs
     {
         public int QuestionId { get; set; }
         public string QuestionText { get; set; } = string.Empty;
+        public string QuestionType { get; set; } = "MultipleChoice";
+
+        // Single-answer fields
         public int SelectedOptionId { get; set; }
         public string SelectedOptionText { get; set; } = string.Empty;
         public int CorrectOptionId { get; set; }
         public string CorrectOptionText { get; set; } = string.Empty;
+
+        // Multi-answer fields
+        public List<int> SelectedOptionIds { get; set; } = new List<int>();
+        public List<string> SelectedOptionTexts { get; set; } = new List<string>();
+        public List<int> CorrectOptionIds { get; set; } = new List<int>();
+        public List<string> CorrectOptionTexts { get; set; } = new List<string>();
+
         public bool IsCorrect { get; set; }
     }
 }

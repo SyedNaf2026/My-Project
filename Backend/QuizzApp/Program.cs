@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
-//using Microsoft.OpenApi.Models;
 using QuizzApp.Context;
 using QuizzApp.Interfaces;
+using QuizzApp.Middleware;
 using QuizzApp.Repository;
 using QuizzApp.Services;
 using System.Text;
@@ -118,6 +118,9 @@ namespace QuizzApp
             // ============================================================
             // 8. MIDDLEWARE PIPELINE
             // ============================================================
+
+            // Global exception handler — must be first
+            app.UseMiddleware<ExceptionMiddleware>();
 
             // Enable Swagger
             app.UseSwagger();

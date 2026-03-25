@@ -37,7 +37,8 @@ namespace QuizzApp.Services
                 TimeLimit = dto.TimeLimit,
                 IsActive = true,
                 CreatedBy = creatorId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Difficulty = dto.Difficulty
             };
 
             await _quizRepo.AddAsync(quiz);
@@ -50,9 +51,10 @@ namespace QuizzApp.Services
                 CategoryName = category.Name,
                 TimeLimit = quiz.TimeLimit,
                 IsActive = quiz.IsActive,
-                CreatorName = "",       // Will be populated when needed
+                CreatorName = "",
                 CreatedAt = quiz.CreatedAt,
-                TotalQuestions = 0
+                TotalQuestions = 0,
+                Difficulty = quiz.Difficulty
             };
 
             return (true, "Quiz created successfully.", result);
@@ -73,6 +75,7 @@ namespace QuizzApp.Services
             quiz.CategoryId = dto.CategoryId;
             quiz.TimeLimit = dto.TimeLimit;
             quiz.IsActive = dto.IsActive;
+            quiz.Difficulty = dto.Difficulty;
 
             await _quizRepo.UpdateAsync(quiz);
             return (true, "Quiz updated successfully.");
@@ -124,7 +127,8 @@ namespace QuizzApp.Services
                 IsActive = q.IsActive,
                 CreatorName = q.Creator?.FullName ?? "",
                 CreatedAt = q.CreatedAt,
-                TotalQuestions = q.Questions.Count
+                TotalQuestions = q.Questions.Count,
+                Difficulty = q.Difficulty
             });
         }
 
@@ -147,7 +151,8 @@ namespace QuizzApp.Services
                 IsActive = q.IsActive,
                 CreatorName = q.Creator?.FullName ?? "",
                 CreatedAt = q.CreatedAt,
-                TotalQuestions = q.Questions.Count
+                TotalQuestions = q.Questions.Count,
+                Difficulty = q.Difficulty
             });
         }
 
@@ -171,7 +176,8 @@ namespace QuizzApp.Services
                 IsActive = quiz.IsActive,
                 CreatorName = quiz.Creator?.FullName ?? "",
                 CreatedAt = quiz.CreatedAt,
-                TotalQuestions = quiz.Questions.Count
+                TotalQuestions = quiz.Questions.Count,
+                Difficulty = quiz.Difficulty
             };
         }
 

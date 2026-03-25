@@ -32,15 +32,6 @@
         }
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Role</label>
-        <select class="form-control" formControlName="role">
-          <option value="QuizTaker">Quiz Taker</option>
-          <option value="QuizCreator">Quiz Creator</option>
-          <option value="Admin">Admin</option>
-        </select>
-      </div>
-
       <button type="submit" class="btn btn-primary w-100 btn-lg" [disabled]="loading">
         @if (loading) { <span class="btn-spinner"></span> }
         {{ loading ? 'Signing in...' : 'Sign In' }}

@@ -325,3 +325,4 @@ C:\Syed\QuizzApp Project\Backend\QuizzApp\obj\Debug\net10.0\QuizzApp.pdb
 C:\Syed\QuizzApp Project\Backend\QuizzApp\obj\Debug\net10.0\QuizzApp.genruntimeconfig.cache
 C:\Syed\QuizzApp Project\Backend\QuizzApp\obj\Debug\net10.0\ref\QuizzApp.dll
 C:\Syed\QuizzApp Project\Backend\QuizzApp\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Syed\QuizzApp Project\Backend\QuizzApp\obj\Debug\net10.0\QuizzApp.sourcelink.json

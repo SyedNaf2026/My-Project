@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Navbar } from '../../navbar/navbar';
@@ -12,7 +12,7 @@ import { QuestionDTO } from '../../models/models';
 @Component({
   selector: 'app-quiz-questions',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, Navbar, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, RouterModule, Navbar, ConfirmDialogComponent],
   templateUrl: './quiz-questions.html'
 })
 export class QuizQuestions implements OnInit {
@@ -24,110 +24,98 @@ export class QuizQuestions implements OnInit {
   saving = false;
   showConfirm = false;
   selectedQ: QuestionDTO | null = null;
-  qForm: FormGroup;
+  editingId: number | null = null;
+  editingText = '';
+  editSaving = false;
+  qText = '';
+  qType = 'MultipleChoice';
+  options: { optionText: string; isCorrect: boolean }[] = [
+    { optionText: '', isCorrect: false },
+    { optionText: '', isCorrect: false }
+  ];
+  questionTypes = [
+    { value: 'MultipleChoice', label: 'Multiple Choice (1 correct)' },
+    { value: 'MultipleAnswer', label: 'Multiple Answer (2+ correct)' },
+    { value: 'TrueFalse', label: 'True / False' },
+    { value: 'YesNo', label: 'Yes / No' }
+  ];
 
   constructor(
-    private fb: FormBuilder,
     private questionService: QuestionService,
     private quizService: QuizService,
     private toast: ToastService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
-  ) {
-    this.qForm = this.fb.group({
-      questionText: ['', Validators.required],
-      options: this.fb.array([this.newOption(), this.newOption()])
-    });
-  }
+  ) {}
 
-  get optionsArray(): FormArray { return this.qForm.get('options') as FormArray; }
-
-  newOption(): FormGroup {
-    return this.fb.group({ optionText: ['', Validators.required], isCorrect: [false] });
-  }
-
-  addOption(): void { this.optionsArray.push(this.newOption()); }
-  removeOption(i: number): void { this.optionsArray.removeAt(i); }
+  get isFixed(): boolean { return this.qType === 'TrueFalse' || this.qType === 'YesNo'; }
 
   ngOnInit(): void {
     this.quizId = Number(this.route.snapshot.paramMap.get('id'));
     this.quizService.getQuizById(this.quizId).subscribe({
-      next: (res) => { this.quizTitle = res.data?.title || ''; }
+      next: (res) => { this.quizTitle = res.data?.title || ''; this.cdr.detectChanges(); }
     });
     this.loadQuestions();
   }
 
   loadQuestions(): void {
     this.loading = true;
-    this.cdr.detectChanges();
     this.questionService.getByQuiz(this.quizId).subscribe({
-      next: (res) => {
-        this.questions = res.data || [];
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.loading = false;
-        this.cdr.detectChanges();
-        setTimeout(() => this.toast.error('Failed to load questions.'), 0);
-      }
+      next: (res) => { this.questions = res.data || []; this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
-  addQuestion(): void {
-    if (this.qForm.invalid) { this.qForm.markAllAsTouched(); return; }
-
-    // Validate exactly one correct option is selected
-    const opts = this.optionsArray.value as { optionText: string; isCorrect: boolean }[];
-    const correctCount = opts.filter(o => o.isCorrect === true).length;
-    if (correctCount === 0) {
-      setTimeout(() => this.toast.error('Please mark exactly one option as correct.'), 0);
-      return;
+  onTypeChange(): void {
+    if (this.qType === 'TrueFalse') {
+      this.options = [{ optionText: 'True', isCorrect: false }, { optionText: 'False', isCorrect: false }];
+    } else if (this.qType === 'YesNo') {
+      this.options = [{ optionText: 'Yes', isCorrect: false }, { optionText: 'No', isCorrect: false }];
+    } else {
+      this.options = [{ optionText: '', isCorrect: false }, { optionText: '', isCorrect: false }];
     }
-    if (correctCount > 1) {
-      setTimeout(() => this.toast.error('Only one option can be marked as correct.'), 0);
-      return;
-    }
+    this.cdr.detectChanges();
+  }
 
+  addOption(): void { this.options.push({ optionText: '', isCorrect: false }); }
+  removeOption(i: number): void { this.options.splice(i, 1); }
+
+  saveQuestion(): void {
+    if (!this.qText.trim()) { setTimeout(() => this.toast.error('Question text is required.'), 0); return; }
+    if (!this.isFixed && this.options.some(o => !o.optionText.trim())) { setTimeout(() => this.toast.error('Please fill in all option texts.'), 0); return; }
+    const correct = this.options.filter(o => o.isCorrect).length;
+    if (correct === 0) { setTimeout(() => this.toast.error('Mark at least one correct option.'), 0); return; }
+    if (this.qType === 'MultipleAnswer' && correct < 2) { setTimeout(() => this.toast.error('Mark at least 2 correct options.'), 0); return; }
+    if (this.qType !== 'MultipleAnswer' && correct !== 1) { setTimeout(() => this.toast.error('Mark exactly 1 correct option.'), 0); return; }
     this.saving = true;
     this.cdr.detectChanges();
-
-    const payload = {
+    this.questionService.addQuestion({
       quizId: this.quizId,
-      questionText: this.qForm.value.questionText,
-      options: opts.map(o => ({ optionText: o.optionText, isCorrect: o.isCorrect === true }))
-    };
-
-    this.questionService.addQuestion(payload).subscribe({
+      questionText: this.qText.trim(),
+      questionType: this.qType,
+      options: this.options.map(o => ({ optionText: o.optionText.trim(), isCorrect: o.isCorrect }))
+    }).subscribe({
       next: (res) => {
         this.saving = false;
         this.cdr.detectChanges();
         if (res.success) {
-          setTimeout(() => this.toast.success('Question added!'), 0);
-          this.showForm = false;
-          this.resetForm();
-          this.loadQuestions();
+          setTimeout(() => { this.showForm = false; this.resetForm(); this.loadQuestions(); this.toast.success('Question added!'); }, 0);
         } else {
-          setTimeout(() => this.toast.error(res.message || 'Failed to add question.'), 0);
+          setTimeout(() => this.toast.error(res.message || 'Failed.'), 0);
         }
       },
       error: (err) => {
         this.saving = false;
         this.cdr.detectChanges();
-        const msg = err?.error?.message || 'Failed to add question.';
-        setTimeout(() => this.toast.error(msg), 0);
+        setTimeout(() => this.toast.error(err?.error?.message || 'Failed to add question.'), 0);
       }
     });
   }
 
   resetForm(): void {
-    // Clear and rebuild the form array cleanly
-    while (this.optionsArray.length > 0) this.optionsArray.removeAt(0);
-    this.optionsArray.push(this.newOption());
-    this.optionsArray.push(this.newOption());
-    this.qForm.get('questionText')?.reset('');
-    this.qForm.markAsPristine();
-    this.qForm.markAsUntouched();
+    this.qText = '';
+    this.qType = 'MultipleChoice';
+    this.options = [{ optionText: '', isCorrect: false }, { optionText: '', isCorrect: false }];
   }
 
   toggleForm(): void {
@@ -135,20 +123,37 @@ export class QuizQuestions implements OnInit {
     if (!this.showForm) this.resetForm();
   }
 
-  confirmDeleteQ(q: QuestionDTO): void {
-    this.selectedQ = q;
-    this.showConfirm = true;
+  typeLabel(type: string): string {
+    return this.questionTypes.find(t => t.value === type)?.label || type;
   }
+
+  confirmDeleteQ(q: QuestionDTO): void { this.selectedQ = q; this.showConfirm = true; }
 
   doDeleteQ(): void {
     if (!this.selectedQ) return;
     this.questionService.deleteQuestion(this.selectedQ.id).subscribe({
-      next: () => {
-        setTimeout(() => this.toast.success('Question deleted.'), 0);
-        this.showConfirm = false;
-        this.loadQuestions();
+      next: () => { this.showConfirm = false; this.loadQuestions(); setTimeout(() => this.toast.success('Question deleted.'), 0); },
+      error: () => setTimeout(() => this.toast.error('Failed to delete.'), 0)
+    });
+  }
+
+  startEdit(q: QuestionDTO): void { this.editingId = q.id; this.editingText = q.questionText; }
+  cancelEdit(): void { this.editingId = null; this.editingText = ''; }
+
+  saveEdit(q: QuestionDTO): void {
+    if (!this.editingText.trim()) { setTimeout(() => this.toast.error('Question text cannot be empty.'), 0); return; }
+    this.editSaving = true;
+    this.questionService.updateQuestion(q.id, this.editingText.trim()).subscribe({
+      next: (res) => {
+        this.editSaving = false;
+        this.editingId = null;
+        if (res.success) {
+          setTimeout(() => { q.questionText = this.editingText.trim(); this.cdr.detectChanges(); this.toast.success('Updated.'); }, 0);
+        } else {
+          setTimeout(() => this.toast.error(res.message || 'Update failed.'), 0);
+        }
       },
-      error: () => setTimeout(() => this.toast.error('Failed to delete question.'), 0)
+      error: () => { this.editSaving = false; setTimeout(() => this.toast.error('Update failed.'), 0); }
     });
   }
 }

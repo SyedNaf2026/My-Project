@@ -17,14 +17,23 @@ import { AnswerDTO, QuestionDTO, QuizDTO, QuizResultDTO } from '../../models/mod
 export class TakeQuiz implements OnInit, OnDestroy {
   quiz: QuizDTO | null = null;
   questions: QuestionDTO[] = [];
+
+  // Single-answer map: questionId → selectedOptionId
   answers: Map<number, number> = new Map();
+  // Multi-answer map: questionId → Set of selected optionIds
+  multiAnswers: Map<number, Set<number>> = new Map();
+  // Skipped question IDs
+  skipped: Set<number> = new Set();
+
+  // Active question index in navigator
+  currentIndex = 0;
 
   loading = true;
   loadError = false;
   errorMessage = '';
   submitting = false;
   submitted = false;
-  quizStarted = false;     // confirmation gate — timer starts only after this
+  quizStarted = false;
   result: QuizResultDTO | null = null;
   showResult = false;
 
@@ -33,8 +42,17 @@ export class TakeQuiz implements OnInit, OnDestroy {
   private warnedAt30 = false;
   private warnedAt10 = false;
 
-  get currentQ(): number { return this.questions.filter(q => this.answers.has(q.id)).length; }
-  get progress(): number { return this.questions.length ? (this.currentQ / this.questions.length) * 100 : 0; }
+  get currentQuestion(): QuestionDTO | null {
+    return this.questions[this.currentIndex] ?? null;
+  }
+
+  get answeredCount(): number {
+    return this.questions.filter(q => this.isAnswered(q.id)).length;
+  }
+
+  get progress(): number {
+    return this.questions.length ? (this.answeredCount / this.questions.length) * 100 : 0;
+  }
 
   get timerClass(): string {
     if (!this.quiz?.timeLimit) return 'timer-normal';
@@ -80,7 +98,6 @@ export class TakeQuiz implements OnInit, OnDestroy {
             }
             if (this.quiz?.timeLimit) this.timeLeft = this.quiz.timeLimit * 60;
             this.cdr.detectChanges();
-            // Timer starts only after user confirms on the confirmation screen
           },
           error: (err) => this.setError(err?.error?.message || 'Failed to load questions.')
         });
@@ -102,6 +119,7 @@ export class TakeQuiz implements OnInit, OnDestroy {
 
   confirmStart(): void {
     this.quizStarted = true;
+    this.currentIndex = 0;
     this.cdr.detectChanges();
     setTimeout(() => { if (this.quiz?.timeLimit) this.startTimer(); }, 100);
   }
@@ -110,8 +128,6 @@ export class TakeQuiz implements OnInit, OnDestroy {
     this.timerInterval = setInterval(() => {
       this.timeLeft--;
       this.cdr.detectChanges();
-
-      // ⚡ Warnings
       if (this.timeLeft === 30 && !this.warnedAt30) {
         this.warnedAt30 = true;
         setTimeout(() => this.toast.error('⚠️ 30 seconds remaining!'), 0);
@@ -120,7 +136,6 @@ export class TakeQuiz implements OnInit, OnDestroy {
         this.warnedAt10 = true;
         setTimeout(() => this.toast.error('🚨 10 seconds left — hurry!'), 0);
       }
-
       if (this.timeLeft <= 0) {
         clearInterval(this.timerInterval);
         this.timerInterval = null;
@@ -130,8 +145,53 @@ export class TakeQuiz implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  // ── Navigator ──────────────────────────────────────────────
+  goToQuestion(index: number): void {
+    if (this.submitted) return;
+    this.currentIndex = index;
+    this.cdr.detectChanges();
+  }
+
+  skipQuestion(): void {
+    if (!this.currentQuestion) return;
+    this.skipped.add(this.currentQuestion.id);
+    // Move to next unanswered/unskipped question, or just next
+    const next = this.findNext();
+    if (next !== -1) this.currentIndex = next;
+    this.cdr.detectChanges();
+  }
+
+  private findNext(): number {
+    for (let i = this.currentIndex + 1; i < this.questions.length; i++) {
+      if (!this.isAnswered(this.questions[i].id) && !this.skipped.has(this.questions[i].id)) return i;
+    }
+    // wrap around
+    for (let i = 0; i < this.currentIndex; i++) {
+      if (!this.isAnswered(this.questions[i].id) && !this.skipped.has(this.questions[i].id)) return i;
+    }
+    return this.currentIndex + 1 < this.questions.length ? this.currentIndex + 1 : this.currentIndex;
+  }
+
+  questionStatus(q: QuestionDTO): 'answered' | 'skipped' | 'unanswered' | 'active' {
+    if (this.questions[this.currentIndex]?.id === q.id && !this.submitted) return 'active';
+    if (this.isAnswered(q.id)) return 'answered';
+    if (this.skipped.has(q.id)) return 'skipped';
+    return 'unanswered';
+  }
+
+  isAnswered(questionId: number): boolean {
+    const q = this.questions.find(x => x.id === questionId);
+    if (!q) return false;
+    if (q.questionType === 'MultipleAnswer') {
+      return (this.multiAnswers.get(questionId)?.size ?? 0) > 0;
+    }
+    return this.answers.has(questionId);
+  }
+
+  // ── Single-answer selection ─────────────────────────────────
   selectAnswer(questionId: number, optionId: number): void {
-    if (this.submitted) return;   // lock after submit
+    if (this.submitted) return;
+    this.skipped.delete(questionId);
     this.answers.set(questionId, optionId);
     this.cdr.detectChanges();
   }
@@ -140,39 +200,74 @@ export class TakeQuiz implements OnInit, OnDestroy {
     return this.answers.get(questionId) === optionId;
   }
 
-  // After result: check if this option was the user's answer
+  // ── Multi-answer selection ──────────────────────────────────
+  toggleMultiAnswer(questionId: number, optionId: number): void {
+    if (this.submitted) return;
+    this.skipped.delete(questionId);
+    if (!this.multiAnswers.has(questionId)) this.multiAnswers.set(questionId, new Set());
+    const set = this.multiAnswers.get(questionId)!;
+    if (set.has(optionId)) set.delete(optionId);
+    else set.add(optionId);
+    this.cdr.detectChanges();
+  }
+
+  isMultiSelected(questionId: number, optionId: number): boolean {
+    return this.multiAnswers.get(questionId)?.has(optionId) ?? false;
+  }
+
+  // ── Result helpers ──────────────────────────────────────────
   wasSelected(questionId: number, optionId: number): boolean {
     return this.answers.get(questionId) === optionId;
   }
 
-  // After result: check if this option is the correct one
-  isCorrectOption(questionId: number, optionId: number): boolean {
-    const breakdown = this.result?.answerBreakdown.find(a => a.questionId === questionId);
-    return breakdown?.correctOptionId === optionId;
+  wasMultiSelected(questionId: number, optionId: number): boolean {
+    const bd = this.result?.answerBreakdown.find(a => a.questionId === questionId);
+    return bd?.selectedOptionIds?.includes(optionId) ?? false;
   }
 
-  // Button class during quiz (selected = primary)
-  // Button class after submit (green = correct, red = wrong selection, outline = unselected)
-  optionClass(questionId: number, optionId: number): string {
+  isCorrectOption(questionId: number, optionId: number): boolean {
+    const bd = this.result?.answerBreakdown.find(a => a.questionId === questionId);
+    if (!bd) return false;
+    if (bd.questionType === 'MultipleAnswer') return bd.correctOptionIds?.includes(optionId) ?? false;
+    return bd.correctOptionId === optionId;
+  }
+
+  optionClass(q: QuestionDTO, optionId: number): string {
     if (!this.submitted) {
-      return this.isSelected(questionId, optionId) ? 'btn-primary' : 'btn-outline';
+      if (q.questionType === 'MultipleAnswer') {
+        return this.isMultiSelected(q.id, optionId) ? 'btn-primary' : 'btn-outline';
+      }
+      return this.isSelected(q.id, optionId) ? 'btn-primary' : 'btn-outline';
     }
-    const correct = this.isCorrectOption(questionId, optionId);
-    const selected = this.wasSelected(questionId, optionId);
+    const correct = this.isCorrectOption(q.id, optionId);
+    const selected = q.questionType === 'MultipleAnswer'
+      ? this.wasMultiSelected(q.id, optionId)
+      : this.wasSelected(q.id, optionId);
     if (correct) return 'btn-correct';
     if (selected && !correct) return 'btn-wrong';
     return 'btn-outline';
   }
 
+  // ── Submit ──────────────────────────────────────────────────
   submit(): void {
     if (!this.quiz || this.submitting || this.submitted) return;
     if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
     this.submitting = true;
     this.cdr.detectChanges();
 
-    const answersArr: AnswerDTO[] = [];
-    this.answers.forEach((selectedOptionId, questionId) => {
-      answersArr.push({ questionId, selectedOptionId });
+    const answersArr: AnswerDTO[] = this.questions.map(q => {
+      if (q.questionType === 'MultipleAnswer') {
+        return {
+          questionId: q.id,
+          selectedOptionId: 0,
+          selectedOptionIds: Array.from(this.multiAnswers.get(q.id) ?? [])
+        };
+      }
+      return {
+        questionId: q.id,
+        selectedOptionId: this.answers.get(q.id) ?? 0,
+        selectedOptionIds: []
+      };
     });
 
     this.attemptService.submitQuiz({ quizId: this.quiz.id, answers: answersArr }).subscribe({
@@ -182,7 +277,6 @@ export class TakeQuiz implements OnInit, OnDestroy {
         if (res.success && res.data) {
           this.result = res.data;
           this.cdr.detectChanges();
-          // Delay result screen for instant feedback view
           setTimeout(() => {
             this.showResult = true;
             this.cdr.detectChanges();

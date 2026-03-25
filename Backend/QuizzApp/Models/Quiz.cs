@@ -20,6 +20,8 @@ namespace QuizzApp.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string? Difficulty { get; set; }
+
         // Navigation properties
         public Category? Category { get; set; }
         public User? Creator { get; set; }

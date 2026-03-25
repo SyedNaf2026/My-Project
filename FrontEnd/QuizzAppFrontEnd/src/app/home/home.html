@@ -103,7 +103,8 @@
       </div>
     </div>
 
-    <!-- FAQ -->
+    <!-- FAQ — only for QuizTakers -->
+    @if (!isCreator) {
     <div class="mb-3">
       <h2 style="color:var(--text);margin-bottom:1rem;font-size:1.3rem">❓ Frequently Asked Questions</h2>
       @for (faq of faqs; track faq.q; let i = $index) {
@@ -124,6 +125,7 @@
         </div>
       }
     </div>
+    }
 
   </div>
 </div>

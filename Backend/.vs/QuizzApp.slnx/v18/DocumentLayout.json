@@ -3,24 +3,12 @@
   "WorkspaceRootPath": "C:\\Syed\\QuizzApp Project\\Backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\services\\questionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\services\\questionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\controllers\\quizcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\controllers\\quizcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\services\\quizservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\services\\quizservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\models\\quiz.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\models\\quiz.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|c:\\syed\\quizzapp project\\backend\\quizzapp\\repository\\genericrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DE2F2891-57C0-57FC-EEEC-F819E9C989A5}|QuizzApp\\QuizzApp.csproj|solutionrelative:quizzapp\\repository\\genericrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,7 +18,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,66 +34,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "QuizzApp\\Controllers\\AuthController.cs",
-              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Controllers\\AuthController.cs",
-              "RelativeToolTip": "QuizzApp\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAIAAAAAAAAAAAAcwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-23T07:22:08.16Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "UserService.cs",
-              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Services\\UserService.cs",
-              "RelativeDocumentMoniker": "QuizzApp\\Services\\UserService.cs",
-              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Services\\UserService.cs",
-              "RelativeToolTip": "QuizzApp\\Services\\UserService.cs",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAYwBYAAAANAAAAAAAAAA==",
+              "Title": "QuestionService.cs",
+              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Services\\QuestionService.cs",
+              "RelativeDocumentMoniker": "QuizzApp\\Services\\QuestionService.cs",
+              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Services\\QuestionService.cs",
+              "RelativeToolTip": "QuizzApp\\Services\\QuestionService.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAQwA0AAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-22T11:38:46.08Z",
+              "WhenOpened": "2026-03-25T05:02:52.242Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "QuizService.cs",
-              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Services\\QuizService.cs",
-              "RelativeDocumentMoniker": "QuizzApp\\Services\\QuizService.cs",
-              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Services\\QuizService.cs",
-              "RelativeToolTip": "QuizzApp\\Services\\QuizService.cs",
-              "ViewState": "AgIAALUAAAAAAAAAAAAAAMYAAABUAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-22T04:48:25.272Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "QuizController.cs",
-              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Controllers\\QuizController.cs",
-              "RelativeDocumentMoniker": "QuizzApp\\Controllers\\QuizController.cs",
-              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Controllers\\QuizController.cs",
-              "RelativeToolTip": "QuizzApp\\Controllers\\QuizController.cs",
-              "ViewState": "AgIAABEAAAAAAAAAAAAAwCAAAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-20T10:32:09.351Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Quiz.cs",
-              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Models\\Quiz.cs",
-              "RelativeDocumentMoniker": "QuizzApp\\Models\\Quiz.cs",
-              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Models\\Quiz.cs",
-              "RelativeToolTip": "QuizzApp\\Models\\Quiz.cs",
+              "DocumentIndex": 1,
+              "Title": "GenericRepository.cs",
+              "DocumentMoniker": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Repository\\GenericRepository.cs",
+              "RelativeDocumentMoniker": "QuizzApp\\Repository\\GenericRepository.cs",
+              "ToolTip": "C:\\Syed\\QuizzApp Project\\Backend\\QuizzApp\\Repository\\GenericRepository.cs",
+              "RelativeToolTip": "QuizzApp\\Repository\\GenericRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-20T10:31:47.223Z"
+              "WhenOpened": "2026-03-25T04:51:38.775Z"
             }
           ]
         },

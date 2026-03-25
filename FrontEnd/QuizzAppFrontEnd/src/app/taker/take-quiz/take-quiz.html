@@ -31,12 +31,9 @@
         <h2 class="mb-1" style="color:var(--text)">Quiz Complete!</h2>
         <h3 style="color:var(--text)" class="mb-3">{{ result.quizTitle }}</h3>
 
-        <!-- Score Cards with animation -->
         <div class="d-flex gap-2 justify-center mb-3">
           <div class="score-card card p-2 text-center" style="min-width:130px">
-            <div class="score-value" style="color:var(--primary)">
-              {{ result.score }}/{{ result.totalQuestions }}
-            </div>
+            <div class="score-value" style="color:var(--primary)">{{ result.score }}/{{ result.totalQuestions }}</div>
             <div style="color:var(--text);font-size:0.875rem">Score</div>
           </div>
           <div class="score-card card p-2 text-center" style="min-width:130px">
@@ -55,16 +52,36 @@
             <div class="card p-2 mb-1"
               [style.border-left]="'4px solid ' + (a.isCorrect ? 'var(--success)' : 'var(--danger)')">
               <p class="fw-bold fs-sm mb-1" style="color:var(--text)">Q{{ i + 1 }}. {{ a.questionText }}</p>
-              <p class="fs-sm mb-0" style="color:var(--text)">
-                Your answer:
-                <span [class]="a.isCorrect ? 'badge badge-success' : 'badge badge-danger'">
-                  {{ a.selectedOptionText }}
-                </span>
-              </p>
-              @if (!a.isCorrect) {
-                <p class="fs-sm mb-0 mt-1" style="color:var(--text)">
-                  Correct: <span class="badge badge-success">{{ a.correctOptionText }}</span>
+              @if (a.questionType === 'MultipleAnswer') {
+                <p class="fs-sm mb-0" style="color:var(--text)">
+                  Your answers:
+                  @for (t of a.selectedOptionTexts; track t) {
+                    <span [class]="a.isCorrect ? 'badge badge-success' : 'badge badge-danger'" style="margin-right:2px">{{ t }}</span>
+                  }
+                  @if (!a.selectedOptionTexts?.length) {
+                    <span class="badge badge-secondary">Not answered</span>
+                  }
                 </p>
+                @if (!a.isCorrect) {
+                  <p class="fs-sm mb-0 mt-1" style="color:var(--text)">
+                    Correct:
+                    @for (t of a.correctOptionTexts; track t) {
+                      <span class="badge badge-success" style="margin-right:2px">{{ t }}</span>
+                    }
+                  </p>
+                }
+              } @else {
+                <p class="fs-sm mb-0" style="color:var(--text)">
+                  Your answer:
+                  <span [class]="a.isCorrect ? 'badge badge-success' : 'badge badge-danger'">
+                    {{ a.selectedOptionText || 'Not answered' }}
+                  </span>
+                </p>
+                @if (!a.isCorrect) {
+                  <p class="fs-sm mb-0 mt-1" style="color:var(--text)">
+                    Correct: <span class="badge badge-success">{{ a.correctOptionText }}</span>
+                  </p>
+                }
               }
             </div>
           }
@@ -122,92 +139,210 @@
       </div>
     }
 
-    <!-- Quiz Taking Screen (also shows instant feedback after submit) -->
+    <!-- Quiz Taking Screen -->
     @else if (quizStarted && quiz && questions.length > 0) {
-      <div style="max-width:720px;margin:0 auto">
+      <div class="quiz-layout">
 
-        <!-- Header -->
-        <div class="d-flex justify-between align-center mb-2 flex-wrap gap-1">
-          <div>
-            <h2 class="mb-0" style="color:var(--text)">{{ quiz.title }}</h2>
-            <p class="text-muted fs-sm mb-0">
-              {{ submitted ? 'Review your answers below' : currentQ + ' / ' + questions.length + ' answered' }}
-            </p>
+        <!-- Left: Question Navigator Panel -->
+        <div class="q-nav-panel card p-2">
+          <p class="fs-sm fw-bold mb-1" style="color:var(--text)">Questions</p>
+          <div class="q-nav-grid">
+            @for (q of questions; track q.id; let i = $index) {
+              <button class="q-nav-btn"
+                [class]="'q-nav-' + questionStatus(q)"
+                (click)="goToQuestion(i)"
+                [disabled]="submitted"
+                [title]="'Q' + (i+1)">
+                {{ i + 1 }}
+              </button>
+            }
           </div>
-          <div class="d-flex gap-1 align-center">
-            @if (quiz.difficulty) {
-              <span class="badge"
-                [class]="quiz.difficulty === 'Easy' ? 'badge-success' : quiz.difficulty === 'Hard' ? 'badge-danger' : 'badge-warning'">
-                {{ quiz.difficulty }}
-              </span>
-            }
-            @if (quiz.timeLimit && !submitted) {
-              <div class="timer-badge" [class]="timerClass">
-                ⏱️ {{ timerDisplay }}
-              </div>
-            }
+          <div class="q-nav-legend mt-2">
+            <span class="q-legend-item"><span class="q-nav-btn q-nav-answered" style="pointer-events:none">1</span> Answered</span>
+            <span class="q-legend-item"><span class="q-nav-btn q-nav-skipped" style="pointer-events:none">2</span> Skipped</span>
+            <span class="q-legend-item"><span class="q-nav-btn q-nav-unanswered" style="pointer-events:none">3</span> Not answered</span>
           </div>
         </div>
 
-        <!-- Progress Bar -->
-        @if (!submitted) {
-          <div class="progress-bar-wrapper mb-3">
-            <div class="progress-bar-fill" [style.width.%]="progress"></div>
-          </div>
-        }
+        <!-- Right: Active Question -->
+        <div class="quiz-main">
 
-        <!-- Submitted banner -->
-        @if (submitted && result) {
-          <div class="feedback-banner mb-3"
-            [class]="result.percentage >= 70 ? 'feedback-great' : result.percentage >= 40 ? 'feedback-ok' : 'feedback-poor'">
-            <span style="font-size:1.5rem">
-              {{ result.percentage >= 70 ? '🎉' : result.percentage >= 40 ? '👍' : '😔' }}
-            </span>
+          <!-- Header -->
+          <div class="d-flex justify-between align-center mb-2 flex-wrap gap-1">
             <div>
-              <strong>{{ result.percentage >= 70 ? 'Great job!' : result.percentage >= 40 ? 'Not bad!' : 'Keep practicing!' }}</strong>
-              <span class="fs-sm" style="margin-left:0.5rem">
-                You scored {{ result.score }}/{{ result.totalQuestions }} ({{ result.percentage | number:'1.0-0' }}%)
-              </span>
+              <h2 class="mb-0" style="color:var(--text)">{{ quiz.title }}</h2>
+              <p class="text-muted fs-sm mb-0">
+                {{ submitted ? 'Review your answers below' : answeredCount + ' / ' + questions.length + ' answered' }}
+              </p>
             </div>
-          </div>
-        }
-
-        <!-- Questions with instant feedback -->
-        @for (q of questions; track q.id; let i = $index) {
-          <div class="card p-3 mb-2">
-            <p class="fw-bold mb-2" style="color:var(--text)">Q{{ i + 1 }}. {{ q.questionText }}</p>
-            <div class="d-flex gap-1 flex-wrap">
-              @for (opt of q.options; track opt.id) {
-                <button class="btn option-btn" style="flex:1;min-width:160px;text-align:left;color:var(--text)"
-                  [class]="optionClass(q.id, opt.id)"
-                  [disabled]="submitted"
-                  (click)="selectAnswer(q.id, opt.id)">
-                  @if (submitted && isCorrectOption(q.id, opt.id)) { ✅ }
-                  @else if (submitted && wasSelected(q.id, opt.id) && !isCorrectOption(q.id, opt.id)) { ❌ }
-                  {{ opt.optionText }}
-                </button>
+            <div class="d-flex gap-1 align-center">
+              @if (quiz.difficulty) {
+                <span class="badge"
+                  [class]="quiz.difficulty === 'Easy' ? 'badge-success' : quiz.difficulty === 'Hard' ? 'badge-danger' : 'badge-warning'">
+                  {{ quiz.difficulty }}
+                </span>
+              }
+              @if (quiz.timeLimit && !submitted) {
+                <div class="timer-badge" [class]="timerClass">⏱️ {{ timerDisplay }}</div>
               }
             </div>
           </div>
-        }
 
-        <!-- Submit / Viewing result -->
-        <div class="d-flex justify-between align-center mt-3 mb-3">
+          <!-- Progress Bar -->
           @if (!submitted) {
-            <p class="text-muted fs-sm mb-0">{{ questions.length - currentQ }} question(s) remaining</p>
-            <button class="btn btn-success btn-lg" (click)="submit()" [disabled]="submitting">
-              @if (submitting) { <span class="btn-spinner"></span> }
-              {{ submitting ? 'Submitting...' : 'Submit Quiz' }}
-            </button>
-          } @else {
-            <p class="text-muted fs-sm mb-0">Scroll up to see your score summary</p>
-            <div class="d-flex gap-1">
-              <a routerLink="/taker/browse" class="btn btn-primary">Browse Quizzes</a>
-              <a routerLink="/taker/results" class="btn btn-outline">My Results</a>
+            <div class="progress-bar-wrapper mb-3">
+              <div class="progress-bar-fill" [style.width.%]="progress"></div>
             </div>
           }
-        </div>
-      </div>
+
+          <!-- Submitted banner -->
+          @if (submitted && result) {
+            <div class="feedback-banner mb-3"
+              [class]="result.percentage >= 70 ? 'feedback-great' : result.percentage >= 40 ? 'feedback-ok' : 'feedback-poor'">
+              <span style="font-size:1.5rem">
+                {{ result.percentage >= 70 ? '🎉' : result.percentage >= 40 ? '👍' : '😔' }}
+              </span>
+              <div>
+                <strong>{{ result.percentage >= 70 ? 'Great job!' : result.percentage >= 40 ? 'Not bad!' : 'Keep practicing!' }}</strong>
+                <span class="fs-sm" style="margin-left:0.5rem">
+                  You scored {{ result.score }}/{{ result.totalQuestions }} ({{ result.percentage | number:'1.0-0' }}%)
+                </span>
+              </div>
+            </div>
+          }
+
+          <!-- Single active question (before submit) -->
+          @if (!submitted && currentQuestion) {
+            <div class="card p-3 mb-2">
+              <div class="d-flex justify-between align-center mb-2">
+                <p class="fw-bold mb-0" style="color:var(--text)">
+                  Q{{ currentIndex + 1 }}. {{ currentQuestion.questionText }}
+                </p>
+                @if (currentQuestion.questionType === 'MultipleAnswer') {
+                  <span class="badge badge-info" style="font-size:0.7rem">Select all that apply</span>
+                }
+              </div>
+
+              <!-- TrueFalse / YesNo: large buttons -->
+              @if (currentQuestion.questionType === 'TrueFalse' || currentQuestion.questionType === 'YesNo') {
+                <div class="d-flex gap-2 justify-center mt-2">
+                  @for (opt of currentQuestion.options; track opt.id) {
+                    <button class="btn btn-lg tf-btn"
+                      [class]="isSelected(currentQuestion.id, opt.id) ? 'btn-primary' : 'btn-outline'"
+                      (click)="selectAnswer(currentQuestion.id, opt.id)">
+                      {{ opt.optionText }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- MultipleAnswer: checkboxes -->
+              @else if (currentQuestion.questionType === 'MultipleAnswer') {
+                <div class="d-flex gap-1 flex-wrap">
+                  @for (opt of currentQuestion.options; track opt.id) {
+                    <button class="btn option-btn multi-opt-btn"
+                      [class]="isMultiSelected(currentQuestion.id, opt.id) ? 'btn-primary' : 'btn-outline'"
+                      style="flex:1;min-width:160px;text-align:left;color:var(--text)"
+                      (click)="toggleMultiAnswer(currentQuestion.id, opt.id)">
+                      <span class="multi-check">{{ isMultiSelected(currentQuestion.id, opt.id) ? '☑' : '☐' }}</span>
+                      {{ opt.optionText }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- MultipleChoice: regular buttons -->
+              @else {
+                <div class="d-flex gap-1 flex-wrap">
+                  @for (opt of currentQuestion.options; track opt.id) {
+                    <button class="btn option-btn"
+                      style="flex:1;min-width:160px;text-align:left;color:var(--text)"
+                      [class]="optionClass(currentQuestion, opt.id)"
+                      (click)="selectAnswer(currentQuestion.id, opt.id)">
+                      {{ opt.optionText }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- Navigation row -->
+              <div class="d-flex justify-between align-center mt-3">
+                <button class="btn btn-sm btn-outline" (click)="goToQuestion(currentIndex - 1)"
+                  [disabled]="currentIndex === 0">← Prev</button>
+                <button class="btn btn-sm btn-warning skip-btn" (click)="skipQuestion()">
+                  ⏭ Skip
+                </button>
+                <button class="btn btn-sm btn-outline" (click)="goToQuestion(currentIndex + 1)"
+                  [disabled]="currentIndex === questions.length - 1">Next →</button>
+              </div>
+            </div>
+          }
+
+          <!-- After submit: show all questions with feedback -->
+          @if (submitted) {
+            @for (q of questions; track q.id; let i = $index) {
+              <div class="card p-3 mb-2">
+                <p class="fw-bold mb-2" style="color:var(--text)">Q{{ i + 1 }}. {{ q.questionText }}</p>
+
+                @if (q.questionType === 'TrueFalse' || q.questionType === 'YesNo') {
+                  <div class="d-flex gap-2 justify-center">
+                    @for (opt of q.options; track opt.id) {
+                      <button class="btn btn-lg tf-btn" [class]="optionClass(q, opt.id)" disabled>
+                        @if (isCorrectOption(q.id, opt.id)) { ✅ }
+                        @else if (wasSelected(q.id, opt.id) && !isCorrectOption(q.id, opt.id)) { ❌ }
+                        {{ opt.optionText }}
+                      </button>
+                    }
+                  </div>
+                } @else if (q.questionType === 'MultipleAnswer') {
+                  <div class="d-flex gap-1 flex-wrap">
+                    @for (opt of q.options; track opt.id) {
+                      <button class="btn option-btn multi-opt-btn"
+                        style="flex:1;min-width:160px;text-align:left;color:var(--text)"
+                        [class]="optionClass(q, opt.id)" disabled>
+                        <span class="multi-check">{{ wasMultiSelected(q.id, opt.id) ? '☑' : '☐' }}</span>
+                        @if (isCorrectOption(q.id, opt.id)) { ✅ }
+                        @else if (wasMultiSelected(q.id, opt.id) && !isCorrectOption(q.id, opt.id)) { ❌ }
+                        {{ opt.optionText }}
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <div class="d-flex gap-1 flex-wrap">
+                    @for (opt of q.options; track opt.id) {
+                      <button class="btn option-btn"
+                        style="flex:1;min-width:160px;text-align:left;color:var(--text)"
+                        [class]="optionClass(q, opt.id)" disabled>
+                        @if (isCorrectOption(q.id, opt.id)) { ✅ }
+                        @else if (wasSelected(q.id, opt.id) && !isCorrectOption(q.id, opt.id)) { ❌ }
+                        {{ opt.optionText }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          <!-- Submit / Done row -->
+          <div class="d-flex justify-between align-center mt-3 mb-3">
+            @if (!submitted) {
+              <p class="text-muted fs-sm mb-0">{{ questions.length - answeredCount }} question(s) remaining</p>
+              <button class="btn btn-success btn-lg" (click)="submit()" [disabled]="submitting">
+                @if (submitting) { <span class="btn-spinner"></span> }
+                {{ submitting ? 'Submitting...' : 'Submit Quiz' }}
+              </button>
+            } @else {
+              <p class="text-muted fs-sm mb-0">Scroll up to see your score summary</p>
+              <div class="d-flex gap-1">
+                <a routerLink="/taker/browse" class="btn btn-primary">Browse Quizzes</a>
+                <a routerLink="/taker/results" class="btn btn-outline">My Results</a>
+              </div>
+            }
+          </div>
+
+        </div><!-- /quiz-main -->
+      </div><!-- /quiz-layout -->
     }
 
   </div>

@@ -9,7 +9,7 @@ namespace QuizzApp.Controllers
     // QuestionController handles adding and managing questions in a quiz
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize(Roles = "QuizCreator")] // Only QuizCreators can manage questions
+    [Authorize]
     public class QuestionController : ControllerBase
     {
         private readonly IQuestionService _questionService;

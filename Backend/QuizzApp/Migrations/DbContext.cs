@@ -15,13 +15,14 @@ namespace QuizzApp.Migrations
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
+#pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("QuizApp.Models.Category", b =>
+            modelBuilder.Entity("QuizzApp.Models.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -44,7 +45,7 @@ namespace QuizzApp.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Option", b =>
+            modelBuilder.Entity("QuizzApp.Models.Option", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -70,7 +71,7 @@ namespace QuizzApp.Migrations
                     b.ToTable("Options");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Question", b =>
+            modelBuilder.Entity("QuizzApp.Models.Question", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -83,6 +84,10 @@ namespace QuizzApp.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("QuestionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 
@@ -93,7 +98,7 @@ namespace QuizzApp.Migrations
                     b.ToTable("Questions");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Quiz", b =>
+            modelBuilder.Entity("QuizzApp.Models.Quiz", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,7 +140,7 @@ namespace QuizzApp.Migrations
                     b.ToTable("Quizzes");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.QuizResult", b =>
+            modelBuilder.Entity("QuizzApp.Models.QuizResult", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -170,7 +175,7 @@ namespace QuizzApp.Migrations
                     b.ToTable("QuizResults");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.User", b =>
+            modelBuilder.Entity("QuizzApp.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -208,7 +213,7 @@ namespace QuizzApp.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.UserAnswer", b =>
+            modelBuilder.Entity("QuizzApp.Models.UserAnswer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -237,9 +242,9 @@ namespace QuizzApp.Migrations
                     b.ToTable("UserAnswers");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Option", b =>
+            modelBuilder.Entity("QuizzApp.Models.Option", b =>
                 {
-                    b.HasOne("QuizApp.Models.Question", "Question")
+                    b.HasOne("QuizzApp.Models.Question", "Question")
                         .WithMany("Options")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -248,9 +253,9 @@ namespace QuizzApp.Migrations
                     b.Navigation("Question");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Question", b =>
+            modelBuilder.Entity("QuizzApp.Models.Question", b =>
                 {
-                    b.HasOne("QuizApp.Models.Quiz", "Quiz")
+                    b.HasOne("QuizzApp.Models.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -259,15 +264,15 @@ namespace QuizzApp.Migrations
                     b.Navigation("Quiz");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Quiz", b =>
+            modelBuilder.Entity("QuizzApp.Models.Quiz", b =>
                 {
-                    b.HasOne("QuizApp.Models.Category", "Category")
+                    b.HasOne("QuizzApp.Models.Category", "Category")
                         .WithMany("Quizzes")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("QuizApp.Models.User", "Creator")
+                    b.HasOne("QuizzApp.Models.User", "Creator")
                         .WithMany("Quizzes")
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -278,15 +283,15 @@ namespace QuizzApp.Migrations
                     b.Navigation("Creator");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.QuizResult", b =>
+            modelBuilder.Entity("QuizzApp.Models.QuizResult", b =>
                 {
-                    b.HasOne("QuizApp.Models.Quiz", "Quiz")
+                    b.HasOne("QuizzApp.Models.Quiz", "Quiz")
                         .WithMany("QuizResults")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("QuizApp.Models.User", "User")
+                    b.HasOne("QuizzApp.Models.User", "User")
                         .WithMany("QuizResults")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -297,15 +302,15 @@ namespace QuizzApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.UserAnswer", b =>
+            modelBuilder.Entity("QuizzApp.Models.UserAnswer", b =>
                 {
-                    b.HasOne("QuizApp.Models.Question", "Question")
+                    b.HasOne("QuizzApp.Models.Question", "Question")
                         .WithMany("UserAnswers")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("QuizApp.Models.User", "User")
+                    b.HasOne("QuizzApp.Models.User", "User")
                         .WithMany("UserAnswers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -316,26 +321,26 @@ namespace QuizzApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Category", b =>
+            modelBuilder.Entity("QuizzApp.Models.Category", b =>
                 {
                     b.Navigation("Quizzes");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Question", b =>
+            modelBuilder.Entity("QuizzApp.Models.Question", b =>
                 {
                     b.Navigation("Options");
 
                     b.Navigation("UserAnswers");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.Quiz", b =>
+            modelBuilder.Entity("QuizzApp.Models.Quiz", b =>
                 {
                     b.Navigation("Questions");
 
                     b.Navigation("QuizResults");
                 });
 
-            modelBuilder.Entity("QuizApp.Models.User", b =>
+            modelBuilder.Entity("QuizzApp.Models.User", b =>
                 {
                     b.Navigation("QuizResults");
 
